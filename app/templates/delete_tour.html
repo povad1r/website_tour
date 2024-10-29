@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Видалення туру{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2>Ви впевнені, що хочете видалити тур: {{ tour.name }}?</h2>
+
+  <form method="POST" action="{{ url_for('delete_tour', id=tour.id) }}">
+    <button type="submit" class="btn btn-danger">Так, видалити</button>
+    <a href="{{ url_for('admin') }}" class="btn btn-secondary">Скасувати</a>
+  </form>
+</div>
+{% endblock %}

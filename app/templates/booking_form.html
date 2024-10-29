@@ -1,0 +1,27 @@
+<div class="card">
+  <div class="card-body">
+    <h5 class="card-title">Book Tour: {{ tour.name }}</h5>
+    <form method="POST" action="{{ url_for('book_tour', id=tour.id) }}">
+      <div class="mb-3">
+        <label for="num_people" class="form-label">Number of People</label>
+        <input type="number" class="form-control" id="num_people" name="num_people" min="1" max="{{ tour.available_spots }}" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Confirm Booking</button>
+      <button type="button" class="btn btn-secondary"
+              hx-get="{{ url_for('tours') }}"
+              hx-target="#booking-form-{{ tour.id }}"
+              hx-swap="innerHTML">
+        Cancel
+      </button>
+    </form>
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="alert alert-warning mt-3">
+      {% for message in messages %}
+      <p>{{ message }}</p>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+  </div>
+</div>

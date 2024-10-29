@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Редагування туру{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2>Редагування туру: {{ tour.name }}</h2>
+
+  <form method="POST" action="{{ url_for('edit_tour', id=tour.id) }}">
+    <div class="mb-3">
+      <label for="name" class="form-label">Назва</label>
+      <input type="text" id="name" name="name" value="{{ tour.name }}" class="form-control" required>
+    </div>
+    <div class="mb-3">
+      <label for="description" class="form-label">Опис</label>
+      <textarea id="description" name="description" class="form-control" rows="3" required>{{ tour.description }}</textarea>
+    </div>
+    <div class="mb-3">
+      <label for="price_per_person" class="form-label">Ціна за особу</label>
+      <input type="number" id="price_per_person" name="price_per_person" value="{{ tour.price_per_person }}" class="form-control" required>
+    </div>
+    <div class="mb-3">
+      <label for="date" class="form-label">Дата</label>
+      <input type="date" id="date" name="date" value="{{ tour.date.strftime('%Y-%m-%d') }}" class="form-control" required>
+    </div>
+    <div class="mb-3">
+      <label for="available_spots" class="form-label">Доступні місця</label>
+      <input type="number" id="available_spots" name="available_spots" value="{{ tour.available_spots }}" class="form-control" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Зберегти зміни</button>
+  </form>
+</div>
+{% endblock %}

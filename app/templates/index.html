@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Welcome to Tour Finder{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center">Welcome to Tour Finder!</h1>
+    <p class="text-center">Find your perfect adventure among our exciting tours.</p>
+
+    <h2 class="mt-5">Hot Tours</h2>
+    <div class="row">
+        {% for tour in tours[:3] %}
+          <div class="col-md-4 mb-4">
+            <div class="card">
+              <img src="{{ url_for('static', filename=tour.image_path) }}" class="card-img-top" alt="{{ tour.name }}">
+              <div class="card-body">
+                <h5 class="card-title">{{ tour.name }}</h5>
+                <p class="card-text">Available Spots: {{ tour.available_spots }}</p>
+                <p class="card-text">Price: {{ tour.price_per_person }}$</p>
+                <a href="{{ url_for('book_tour', id=tour.id) }}" class="btn btn-primary">Book Now</a>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+    </div>
+
+    <h2 class="mt-5">Add a New Tour</h2>
+    <form action="{{ url_for('add_tour') }}" method="POST" enctype="multipart/form-data">
+        <div class="mb-3">
+            <label for="name" class="form-label">Tour Name</label>
+            <input type="text" class="form-control" id="name" name="name" required>
+        </div>
+        <div class="mb-3">
+            <label for="description" class="form-label">Description</label>
+            <textarea class="form-control" id="description" name="description" required></textarea>
+        </div>
+        <div class="mb-3">
+            <label for="image" class="form-label">Upload Image</label>
+            <input type="file" class="form-control" id="image" name="image" required>
+        </div>
+        <div class="mb-3">
+            <label for="price_per_person" class="form-label">Price per Person</label>
+            <input type="number" class="form-control" id="price_per_person" name="price_per_person" step="0.01" required>
+        </div>
+        <div class="mb-3">
+            <label for="date" class="form-label">Date</label>
+            <input type="date" class="form-control" id="date" name="date" required>
+        </div>
+        <div class="mb-3">
+            <label for="available_spots" class="form-label">Available Spots</label>
+            <input type="number" class="form-control" id="available_spots" name="available_spots" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Add Tour</button>
+    </form>
+</div>
+{% endblock %}

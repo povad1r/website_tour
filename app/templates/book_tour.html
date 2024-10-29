@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Book Tour - {{ tour.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h1 class="text-center mb-4">Book Your Tour: {{ tour.name }}</h1>
+
+  <div class="row">
+    <div class="col-md-6">
+      <img src="{{ url_for('static', filename=tour.image_path) }}" class="img-fluid rounded" alt="{{ tour.name }}">
+    </div>
+    <div class="col-md-6">
+      <h3>Tour Details</h3>
+      <p><strong>Description:</strong> {{ tour.description }}</p>
+      <p><strong>Price per Person:</strong> {{ tour.price_per_person }}$</p>
+      <p><strong>Date:</strong> {{ tour.date }}</p>
+      <p><strong>Available Spots:</strong> {{ tour.available_spots }}</p>
+    </div>
+  </div>
+
+  <h2 class="mt-4">Booking Information</h2>
+  <form method="POST" class="mt-3">
+    <div class="mb-3">
+      <label for="num_people" class="form-label">Number of People</label>
+      <input type="number" class="form-control" id="num_people" name="num_people" min="1" max="{{ tour.available_spots }}" required onchange="updatePrice()">
+    </div>
+    <p><strong>Total Price:</strong> <span id="total_price">{{ tour.price_per_person }}$</span></p>
+    <button type="submit" class="btn btn-primary">Confirm Booking</button>
+    <a href="{{ url_for('tours') }}" class="btn btn-secondary">Cancel</a>
+  </form>
+
+  {% with messages = get_flashed_messages() %}
+  {% if messages %}
+  <div class="alert alert-warning mt-3">
+    {% for message in messages %}
+    <p>{{ message }}</p>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endwith %}
+</div>
+
+<script>
+  function updatePrice() {
+    const pricePerPerson = {{ tour.price_per_person }};
+    const numPeopleInput = document.getElementById('num_people');
+    const totalPriceSpan = document.getElementById('total_price');
+
+    const numPeople = numPeopleInput.value ? parseInt(numPeopleInput.value) : 0;
+    const totalPrice = numPeople * pricePerPerson;
+    totalPriceSpan.textContent = totalPrice + '$';
+  }
+</script>
+
+{% endblock %}
