@@ -37,24 +37,53 @@ def tour_detail(id):
 
 # Сторінка бронювання
 @app.route('/book_tour/<int:id>', methods=['GET', 'POST'])
+@login_required  # Ensure the user is logged in
 def book_tour(id):
     tour = Tour.query.get_or_404(id)
+
     if request.method == 'POST':
         num_people = int(request.form.get('num_people'))
         total_price = num_people * tour.price_per_person
 
+        # Check if enough spots are available
         if num_people > tour.available_spots:
             flash('Недостатньо місць!')  # Not enough spots available
             return redirect(url_for('book_tour', id=id))
 
+        # Create a new booking
+        booking = Booking(user_id=current_user.id, tour_id=tour.id, num_people=num_people, total_price=total_price)
+
+        # Update available spots and add the booking
         tour.available_spots -= num_people
-        db.session.commit()
+        db.session.add(booking)  # Add the booking to the session
+        db.session.commit()  # Commit the changes
+
         flash(f'Бронювання успішне! Загальна ціна: {total_price}')  # Booking successful!
-        return redirect(url_for('index'))
+        return redirect(url_for('index'))  # Redirect to a relevant page
 
     return render_template('book_tour.html', tour=tour)
 
 
+@app.route('/cancel_booking/<int:id>', methods=['POST'])
+@login_required
+def cancel_booking(id):
+    booking = Booking.query.get_or_404(id)
+
+    # Ensure the current user is the owner of the booking
+    if booking.user_id != current_user.id:
+        flash('You cannot cancel this booking.', 'danger')
+        return redirect(url_for('profile'))  # Redirect to the profile page
+
+    # Increase available spots in the tour
+    tour = Tour.query.get(booking.tour_id)
+    tour.available_spots += booking.num_people
+
+    # Delete the booking
+    db.session.delete(booking)
+    db.session.commit()
+
+    flash('Your booking has been cancelled and spots have been returned!', 'success')
+    return redirect(url_for('profile'))  # Redirect to the profile page
 
 # Панель адміністратора (доступ тільки для адміністраторів)
 @app.route('/add_tour', methods=['GET', 'POST'])
@@ -163,10 +192,11 @@ def logout():
     flash('You have been logged out.')
     return redirect(url_for('index'))
 
-@app.route('/profile')
+@app.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
-    return render_template('profile.html', user=current_user)
+    user_bookings = Booking.query.filter_by(user_id=current_user.id).all()
+    return render_template('profile.html', user=current_user, bookings=user_bookings)
 
 
 @app.route('/change_password', methods=['POST'])

@@ -3,11 +3,40 @@
 {% block title %}Profile{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
     <h1 class="text-center mb-4">Profile</h1>
 
-    <!-- Display flash messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
+
+    <div class="mb-3">
+        <h4>Username: {{ current_user.username }}</h4>
+    </div>
+    <div class="mb-3">
+        <h4>Email: {{ current_user.email }}</h4>
+    </div>
+
+    <h2>Your Bookings</h2>
+    <div class="row">
+        {% for booking in bookings %}
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <img src="{{ url_for('static', filename=booking.tour.image_path) }}" class="card-img-top" alt="{{ booking.tour.name }}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ booking.tour.name }}</h5>
+                        <p class="card-text">Booked Spots: {{ booking.num_people }}</p>
+                        <p class="card-text">Total Spent: {{ booking.total_price }}$</p>
+                        <form action="{{ url_for('cancel_booking', id=booking.id) }}" method="POST" style="display:inline;">
+                            <button type="submit" class="btn btn-danger">Cancel Booking</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="col-12">
+                <div class="alert alert-info text-center">No bookings found.</div>
+            </div>
+        {% endfor %}
+    </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             <div class="alert mt-3">
                 {% for category, message in messages %}
@@ -16,13 +45,6 @@
             </div>
         {% endif %}
     {% endwith %}
-
-    <div class="mb-3">
-        <h4>Username: {{ current_user.username }}</h4>
-    </div>
-    <div class="mb-3">
-        <h4>Email: {{ current_user.email }}</h4>
-    </div>
     <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#changePasswordModal">Change Password</button>
     <a href="{{ url_for('logout') }}" class="btn btn-danger">Logout</a>
 </div>
