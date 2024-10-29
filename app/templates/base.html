@@ -62,6 +62,11 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('profile') }}">Profile</a>
                     </li>
+                    {% if is_admin(current_user.id) %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_panel') }}">Admin Panel</a>
+                        </li>
+                    {% endif %}
                 {% else %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('register') }}">Register</a>
@@ -71,7 +76,7 @@
                     </li>
                 {% endif %}
             </ul>
-            <form class="d-flex" action="{{ url_for('search') }}" method="GET">
+            <form class="d-flex" action="{{ url_for('search_results') }}" method="GET">
                 <input class="form-control me-2" type="search" name="search" placeholder="Search tours" aria-label="Search">
                 <button class="btn btn-outline-light" type="submit">Search</button>
             </form>

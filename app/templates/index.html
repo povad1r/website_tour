@@ -24,33 +24,5 @@
         {% endfor %}
     </div>
 
-    <h2 class="text-center mt-5">Add a New Tour</h2>
-    <form action="{{ url_for('add_tour') }}" method="POST" enctype="multipart/form-data">
-        <div class="mb-3">
-            <label for="name" class="form-label">Tour Name</label>
-            <input type="text" class="form-control" id="name" name="name" required>
-        </div>
-        <div class="mb-3">
-            <label for="description" class="form-label">Description</label>
-            <textarea class="form-control" id="description" name="description" required></textarea>
-        </div>
-        <div class="mb-3">
-            <label for="image" class="form-label">Upload Image</label>
-            <input type="file" class="form-control" id="image" name="image" required>
-        </div>
-        <div class="mb-3">
-            <label for="price_per_person" class="form-label">Price per Person</label>
-            <input type="number" class="form-control" id="price_per_person" name="price_per_person" step="0.01" required>
-        </div>
-        <div class="mb-3">
-            <label for="date" class="form-label">Date</label>
-            <input type="date" class="form-control" id="date" name="date" required>
-        </div>
-        <div class="mb-3">
-            <label for="available_spots" class="form-label">Available Spots</label>
-            <input type="number" class="form-control" id="available_spots" name="available_spots" required>
-        </div>
-        <button type="submit" class="btn btn-primary">Add Tour</button>
-    </form>
 </div>
 {% endblock %}

@@ -1,19 +1,27 @@
 import os
 
-from flask import render_template, request, redirect, flash, url_for
+from flask import render_template, request, redirect, flash, url_for, session
 from flask_login import current_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
-
+from .config import *
 from .db import *
-
 
 @login.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+@app.context_processor
+def context_processor():
+    return dict(is_admin=is_admin)
 ###MAIN PAGES###
 
 @app.route('/')
 def index():
+    tours = Tour.query.filter(Tour.available_spots > 0).all()
+    return render_template('index.html', tours=tours)
+
+@app.route('/search', methods=['GET'])
+def search_results():
     search = request.args.get('search')
     if search:
         tours = Tour.query.filter(
@@ -21,9 +29,9 @@ def index():
             (Tour.available_spots > 0)  # Only include tours with available spots
         ).all()
     else:
-        tours = Tour.query.filter(Tour.available_spots > 0).all()  # Only include tours with available spots
-    return render_template('index.html', tours=tours)
+        tours = []  # No search term provided, return an empty list
 
+    return render_template('search_results.html', tours=tours, search=search)
 @app.route('/tours/', methods=['GET'])
 def tours():
     tours = Tour.query.filter(Tour.available_spots > 0).all()  # Only include tours with available spots
@@ -179,6 +187,7 @@ def login():
         if user and check_password_hash(user.password_hash, password):
             login_user(user)
             flash('Login successful!')
+            session['user_id'] = user.id
             return redirect(url_for('index'))
         else:
             error = 'Invalid username or password. Please try again.'
@@ -222,3 +231,43 @@ def change_password():
 
     flash('Password successfully changed!', 'success')
     return redirect(url_for('profile'))
+
+def is_admin(user_id):
+    admin_ids = [1]
+    return user_id in admin_ids
+
+@app.route('/admin_panel', methods=['GET', 'POST'])
+def admin_panel():
+    if 'user_id' not in session or not is_admin(session['user_id']):
+        flash('You do not have permission to access this page.', 'danger')
+        return redirect(url_for('index'))
+
+    tours = Tour.query.all()  # Fetch all tours for admin view
+    return render_template('admin_panel.html', tours=tours)
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+@app.route('/edit_tour/<int:id>', methods=['GET', 'POST'])
+def edit_tour(id):
+    tour = Tour.query.get_or_404(id)
+    if request.method == 'POST':
+        # Update tour details based on form input
+        tour.name = request.form.get('name')
+        tour.description = request.form.get('description')
+        tour.price_per_person = request.form.get('price_per_person')
+        tour.available_spots = request.form.get('available_spots')
+        # Handle image upload if necessary
+        db.session.commit()
+        flash('Tour updated successfully!', 'success')
+        return redirect(url_for('admin_panel'))
+
+    return render_template('edit_tour.html', tour=tour)
+
+
+@app.route('/delete_tour/<int:id>')
+def delete_tour(id):
+    tour = Tour.query.get_or_404(id)
+    db.session.delete(tour)
+    db.session.commit()
+    flash('Tour deleted successfully!', 'success')
+    return redirect(url_for('admin_panel'))
