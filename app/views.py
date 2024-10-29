@@ -26,26 +26,25 @@ def search_results():
     if search:
         tours = Tour.query.filter(
             (Tour.name.contains(search) | Tour.description.contains(search)) &
-            (Tour.available_spots > 0)  # Only include tours with available spots
+            (Tour.available_spots > 0)
         ).all()
     else:
-        tours = []  # No search term provided, return an empty list
+        tours = []
 
     return render_template('search_results.html', tours=tours, search=search)
 @app.route('/tours/', methods=['GET'])
 def tours():
-    tours = Tour.query.filter(Tour.available_spots > 0).all()  # Only include tours with available spots
-    return render_template('tours.html', tours=tours)  # Передати тури в шаблон
+    tours = Tour.query.filter(Tour.available_spots > 0).all()
+    return render_template('tours.html', tours=tours)
 
-# Сторінка деталей туру
+
 @app.route('/tour/<int:id>')
 def tour_detail(id):
     tour = Tour.query.get_or_404(id)
     return render_template('tour_detail.html', tour=tour)
 
-# Сторінка бронювання
 @app.route('/book_tour/<int:id>', methods=['GET', 'POST'])
-@login_required  # Ensure the user is logged in
+@login_required
 def book_tour(id):
     tour = Tour.query.get_or_404(id)
 
@@ -53,21 +52,20 @@ def book_tour(id):
         num_people = int(request.form.get('num_people'))
         total_price = num_people * tour.price_per_person
 
-        # Check if enough spots are available
+
         if num_people > tour.available_spots:
-            flash('Недостатньо місць!')  # Not enough spots available
+            flash('Недостатньо місць!')
             return redirect(url_for('book_tour', id=id))
 
-        # Create a new booking
         booking = Booking(user_id=current_user.id, tour_id=tour.id, num_people=num_people, total_price=total_price)
 
-        # Update available spots and add the booking
-        tour.available_spots -= num_people
-        db.session.add(booking)  # Add the booking to the session
-        db.session.commit()  # Commit the changes
 
-        flash(f'Бронювання успішне! Загальна ціна: {total_price}')  # Booking successful!
-        return redirect(url_for('index'))  # Redirect to a relevant page
+        tour.available_spots -= num_people
+        db.session.add(booking)
+        db.session.commit()
+
+        flash(f'Бронювання успішне! Загальна ціна: {total_price}')
+        return redirect(url_for('index'))
 
     return render_template('book_tour.html', tour=tour)
 
@@ -77,23 +75,21 @@ def book_tour(id):
 def cancel_booking(id):
     booking = Booking.query.get_or_404(id)
 
-    # Ensure the current user is the owner of the booking
     if booking.user_id != current_user.id:
         flash('You cannot cancel this booking.', 'danger')
-        return redirect(url_for('profile'))  # Redirect to the profile page
+        return redirect(url_for('profile'))
 
-    # Increase available spots in the tour
+
     tour = Tour.query.get(booking.tour_id)
     tour.available_spots += booking.num_people
 
-    # Delete the booking
+
     db.session.delete(booking)
     db.session.commit()
 
     flash('Your booking has been cancelled and spots have been returned!', 'success')
-    return redirect(url_for('profile'))  # Redirect to the profile page
+    return redirect(url_for('profile'))
 
-# Панель адміністратора (доступ тільки для адміністраторів)
 @app.route('/add_tour', methods=['GET', 'POST'])
 def add_tour():
     if request.method == 'POST':
@@ -116,7 +112,6 @@ def add_tour():
             date=date,
             available_spots=available_spots,
             image_path=image_path
-            # creation_time будет автоматически установлен
         )
 
         db.session.add(new_tour)
@@ -134,7 +129,7 @@ def search():
     if search_query:
         query = query.filter(
             (Tour.name.contains(search_query) | Tour.description.contains(search_query)) &
-            (Tour.available_spots > 0)  # Only include tours with available spots
+            (Tour.available_spots > 0)
         )
 
     tours = query.all()
@@ -148,7 +143,6 @@ def register():
         password = request.form['password']
         confirm_password = request.form['confirm_password']
 
-        # Check if the username or email already exists
         if User.query.filter_by(username=username).first():
             error = 'Username already exists. Please choose a different one.'
             return render_template('register.html', error=error)
@@ -157,16 +151,15 @@ def register():
             error = 'Email already registered. Please use a different one.'
             return render_template('register.html', error=error)
 
-        # Check if passwords match
+
         if password != confirm_password:
             error = 'Passwords do not match. Please try again.'
             return render_template('register.html', error=error)
 
-        # Create a new user
         new_user = User(
             username=username,
             email=email,
-            password_hash=generate_password_hash(password)  # Hash the password
+            password_hash=generate_password_hash(password)
         )
 
         db.session.add(new_user)
@@ -215,17 +208,15 @@ def change_password():
     new_password = request.form.get('new_password')
     confirm_new_password = request.form.get('confirm_new_password')
 
-    # Check if the old password is correct
     if not check_password_hash(current_user.password_hash, old_password):
         flash('Old password is incorrect.', 'danger')
         return redirect(url_for('profile'))
 
-    # Check if new password matches confirm password
+
     if new_password != confirm_new_password:
         flash('New passwords do not match.', 'danger')
         return redirect(url_for('profile'))
 
-    # Update password and save changes
     current_user.password_hash = generate_password_hash(new_password)
     db.session.commit()
 
@@ -242,7 +233,7 @@ def admin_panel():
         flash('You do not have permission to access this page.', 'danger')
         return redirect(url_for('index'))
 
-    tours = Tour.query.all()  # Fetch all tours for admin view
+    tours = Tour.query.all()
     return render_template('admin_panel.html', tours=tours)
 
 def allowed_file(filename):
@@ -251,12 +242,10 @@ def allowed_file(filename):
 def edit_tour(id):
     tour = Tour.query.get_or_404(id)
     if request.method == 'POST':
-        # Update tour details based on form input
         tour.name = request.form.get('name')
         tour.description = request.form.get('description')
         tour.price_per_person = request.form.get('price_per_person')
         tour.available_spots = request.form.get('available_spots')
-        # Handle image upload if necessary
         db.session.commit()
         flash('Tour updated successfully!', 'success')
         return redirect(url_for('admin_panel'))
