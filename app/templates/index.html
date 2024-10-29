@@ -7,8 +7,8 @@
     <h1 class="text-center">Welcome to Tour Finder!</h1>
     <p class="text-center">Find your perfect adventure among our exciting tours.</p>
 
-    <h2 class="mt-5">Hot Tours</h2>
-    <div class="row">
+    <h2 class="text-center mt-5">Hot Tours</h2>
+    <div class="row justify-content-center">
         {% for tour in tours[:3] %}
           <div class="col-md-4 mb-4">
             <div class="card">
@@ -24,7 +24,7 @@
         {% endfor %}
     </div>
 
-    <h2 class="mt-5">Add a New Tour</h2>
+    <h2 class="text-center mt-5">Add a New Tour</h2>
     <form action="{{ url_for('add_tour') }}" method="POST" enctype="multipart/form-data">
         <div class="mb-3">
             <label for="name" class="form-label">Tour Name</label>

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="text-center mb-4">Login</h1>
+
+    <form method="POST">
+        <div class="mb-3">
+            <label for="username" class="form-label">Username</label>
+            <input type="text" class="form-control" id="username" name="username" required>
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <div class="input-group">
+                <input type="password" class="form-control" id="password" name="password" required>
+                <span class="input-group-text" id="togglePassword" style="cursor: pointer;">👁️</span>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Login</button>
+        <a href="{{ url_for('register') }}" class="btn btn-secondary">Don't have an account? Register</a>
+    </form>
+
+    {% if error %}
+        <p class="mt-3 text-danger">{{ error }}</p>
+    {% endif %}
+</div>
+
+<script>
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
+
+    togglePassword.addEventListener('click', () => {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        togglePassword.textContent = type === 'password' ? '👁️' : '🙈';
+    });
+</script>
+{% endblock %}

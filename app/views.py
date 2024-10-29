@@ -91,12 +91,15 @@ def add_tour():
 @app.route('/search')
 def search():
     filters = request.args.to_dict()
+    search_query = filters.get('search', '')
     query = Tour.query
-    if 'price_min' in filters:
-        query = query.filter(Tour.price_per_person >= float(filters['price_min']))
-    if 'price_max' in filters:
-        query = query.filter(Tour.price_per_person <= float(filters['price_max']))
-    # Додаткові фільтри
+
+    if search_query:
+        query = query.filter(
+            (Tour.name.contains(search_query) | Tour.description.contains(search_query)) &
+            (Tour.available_spots > 0)  # Only include tours with available spots
+        )
+
     tours = query.all()
     return render_template('index.html', tours=tours)
 
@@ -106,19 +109,27 @@ def register():
         username = request.form['username']
         email = request.form['email']
         password = request.form['password']
+        confirm_password = request.form['confirm_password']
 
+        # Check if the username or email already exists
         if User.query.filter_by(username=username).first():
-            flash('Username already exists. Please choose a different one.')
-            return redirect(url_for('register'))
+            error = 'Username already exists. Please choose a different one.'
+            return render_template('register.html', error=error)
 
         if User.query.filter_by(email=email).first():
-            flash('Email already registered. Please use a different one.')
-            return redirect(url_for('register'))
+            error = 'Email already registered. Please use a different one.'
+            return render_template('register.html', error=error)
 
+        # Check if passwords match
+        if password != confirm_password:
+            error = 'Passwords do not match. Please try again.'
+            return render_template('register.html', error=error)
+
+        # Create a new user
         new_user = User(
             username=username,
             email=email,
-            password_hash=generate_password_hash(password)
+            password_hash=generate_password_hash(password)  # Hash the password
         )
 
         db.session.add(new_user)
@@ -141,7 +152,8 @@ def login():
             flash('Login successful!')
             return redirect(url_for('index'))
         else:
-            flash('Invalid username or password. Please try again.')
+            error = 'Invalid username or password. Please try again.'
+            return render_template('login.html', error=error)
 
     return render_template('login.html')
 
@@ -155,3 +167,28 @@ def logout():
 @login_required
 def profile():
     return render_template('profile.html', user=current_user)
+
+
+@app.route('/change_password', methods=['POST'])
+@login_required
+def change_password():
+    old_password = request.form.get('old_password')
+    new_password = request.form.get('new_password')
+    confirm_new_password = request.form.get('confirm_new_password')
+
+    # Check if the old password is correct
+    if not check_password_hash(current_user.password_hash, old_password):
+        flash('Old password is incorrect.', 'danger')
+        return redirect(url_for('profile'))
+
+    # Check if new password matches confirm password
+    if new_password != confirm_new_password:
+        flash('New passwords do not match.', 'danger')
+        return redirect(url_for('profile'))
+
+    # Update password and save changes
+    current_user.password_hash = generate_password_hash(new_password)
+    db.session.commit()
+
+    flash('Password successfully changed!', 'success')
+    return redirect(url_for('profile'))
