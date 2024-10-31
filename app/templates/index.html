@@ -3,9 +3,17 @@
 {% block title %}Welcome to Tour Finder{% endblock %}
 
 {% block content %}
+<style>
+    .welcome-text {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #000000;  /* Change to match your branding */
+    text-shadow: 1px 1px #888888;
+    }
+</style>
 <div class="container mt-5">
-    <h1 class="text-center">Welcome to Tour Finder!</h1>
-    <p class="text-center">Find your perfect adventure among our exciting tours.</p>
+    <h1 class="text-center welcome-text">Welcome to HotTour!</h1>
+    <p class="text-center lead">Find your perfect adventure among our exciting tours.</p>
 
     <h2 class="text-center mt-5">Hot Tours</h2>
     <div class="row justify-content-center">
@@ -23,6 +31,5 @@
           </div>
         {% endfor %}
     </div>
-
 </div>
 {% endblock %}

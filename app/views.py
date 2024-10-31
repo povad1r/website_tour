@@ -1,5 +1,6 @@
 import os
 
+from datetime import datetime
 from flask import render_template, request, redirect, flash, url_for, session
 from flask_login import current_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -23,7 +24,7 @@ def context_processor():
 
 @app.route('/')
 def index():
-    tours = Tour.query.filter(Tour.available_spots > 0).all()
+    tours = Tour.query.order_by(Tour.available_spots.asc()).limit(3).all()
     return render_template('index.html', tours=tours)
 
 
@@ -271,25 +272,36 @@ def allowed_file(filename):
 
 
 @app.route('/edit_tour/<int:id>', methods=['GET', 'POST'])
+@login_required
 def edit_tour(id):
     tour = Tour.query.get_or_404(id)
     if request.method == 'POST':
         tour.name = request.form.get('name')
         tour.description = request.form.get('description')
         tour.price_per_person = request.form.get('price_per_person')
-        tour.available_spots = request.form.get('available_spots')
+        # Convert date string to date object
+        date_str = request.form.get('date')
+        if date_str:
+            tour.date = datetime.strptime(date_str, '%Y-%m-%d').date()
+
+        # Convert available_spots to integer
+        available_spots_str = request.form.get('available_spots')
+        if available_spots_str:
+            tour.available_spots = int(available_spots_str)
+
+        # Handle photo upload
         if 'photo' in request.files:
             photo = request.files['photo']
             if photo and allowed_file(photo.filename):
                 filename = secure_filename(photo.filename)
                 photo.save(os.path.join(UPLOAD_FOLDER, filename))
-                tour.photo = filename
+                tour.image_path = filename
+
         db.session.commit()
         flash('Tour updated successfully!', 'success')
         return redirect(url_for('admin_panel'))
 
     return render_template('edit_tour.html', tour=tour)
-
 
 @app.route('/delete_tour/<int:id>')
 def delete_tour(id):

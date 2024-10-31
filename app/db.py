@@ -23,9 +23,11 @@ class Tour(db.Model):
     name = db.Column(db.String(100), nullable=False)
     image_path = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=False)
-    price_per_person = db.Column(db.Float, nullable=False)
+    price_per_person = db.Column(db.Float, nullable=False)  # Цена с учетом скидки
     date = db.Column(db.Date, nullable=False)
     available_spots = db.Column(db.Integer, nullable=False)
+
+
 
 class Booking(db.Model):
     id = db.Column(db.Integer, primary_key=True)
