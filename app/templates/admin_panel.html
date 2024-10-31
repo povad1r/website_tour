@@ -39,7 +39,9 @@
     <table class="table">
         <thead>
             <tr>
+                <th>Image</th>
                 <th>Name</th>
+                <th>Description</th>
                 <th>Available Spots</th>
                 <th>Price</th>
                 <th>Actions</th>
@@ -48,7 +50,9 @@
         <tbody>
             {% for tour in tours %}
                 <tr>
+                    <td><img src="{{ url_for('static', filename=tour.image_path) }}" width="100px" height="50px" alt="{{ tour.name }}"></td>
                     <td>{{ tour.name }}</td>
+                    <td>{{ tour.description[:25] }}</td>
                     <td>{{ tour.available_spots }}</td>
                     <td>{{ tour.price_per_person }}$</td>
                     <td>

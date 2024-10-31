@@ -3,22 +3,29 @@ import os
 from flask import render_template, request, redirect, flash, url_for, session
 from flask_login import current_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
+
 from .config import *
 from .db import *
+
 
 @login.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+
 @app.context_processor
 def context_processor():
     return dict(is_admin=is_admin)
+
+
 ###MAIN PAGES###
 
 @app.route('/')
 def index():
     tours = Tour.query.filter(Tour.available_spots > 0).all()
     return render_template('index.html', tours=tours)
+
 
 @app.route('/search', methods=['GET'])
 def search_results():
@@ -32,9 +39,27 @@ def search_results():
         tours = []
 
     return render_template('search_results.html', tours=tours, search=search)
-@app.route('/tours/', methods=['GET'])
+
+
+@app.route('/tours/')
 def tours():
-    tours = Tour.query.filter(Tour.available_spots > 0).all()
+    # Start with the base query
+    query = Tour.query
+
+    # Apply filters based on query parameters
+    price_max = request.args.get('price_max')
+    date = request.args.get('date')
+    available_spots_min = request.args.get('available_spots_min')
+
+    if price_max:
+        query = query.filter(Tour.price_per_person <= float(price_max))
+    if date:
+        query = query.filter(Tour.date == date)
+    if available_spots_min:
+        query = query.filter(Tour.available_spots >= int(available_spots_min))
+
+    # Execute query and render the page with filtered tours
+    tours = query.all()
     return render_template('tours.html', tours=tours)
 
 
@@ -42,6 +67,7 @@ def tours():
 def tour_detail(id):
     tour = Tour.query.get_or_404(id)
     return render_template('tour_detail.html', tour=tour)
+
 
 @app.route('/book_tour/<int:id>', methods=['GET', 'POST'])
 @login_required
@@ -52,20 +78,18 @@ def book_tour(id):
         num_people = int(request.form.get('num_people'))
         total_price = num_people * tour.price_per_person
 
-
         if num_people > tour.available_spots:
             flash('Недостатньо місць!')
             return redirect(url_for('book_tour', id=id))
 
         booking = Booking(user_id=current_user.id, tour_id=tour.id, num_people=num_people, total_price=total_price)
 
-
         tour.available_spots -= num_people
         db.session.add(booking)
         db.session.commit()
 
         flash(f'Бронювання успішне! Загальна ціна: {total_price}')
-        return redirect(url_for('index'))
+        return redirect(url_for('profile'))
 
     return render_template('book_tour.html', tour=tour)
 
@@ -79,16 +103,15 @@ def cancel_booking(id):
         flash('You cannot cancel this booking.', 'danger')
         return redirect(url_for('profile'))
 
-
     tour = Tour.query.get(booking.tour_id)
     tour.available_spots += booking.num_people
-
 
     db.session.delete(booking)
     db.session.commit()
 
     flash('Your booking has been cancelled and spots have been returned!', 'success')
     return redirect(url_for('profile'))
+
 
 @app.route('/add_tour', methods=['GET', 'POST'])
 def add_tour():
@@ -120,6 +143,8 @@ def add_tour():
         return redirect(url_for('index'))
 
     return render_template('add_tour.html')
+
+
 @app.route('/search')
 def search():
     filters = request.args.to_dict()
@@ -134,6 +159,7 @@ def search():
 
     tours = query.all()
     return render_template('index.html', tours=tours)
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -151,7 +177,6 @@ def register():
             error = 'Email already registered. Please use a different one.'
             return render_template('register.html', error=error)
 
-
         if password != confirm_password:
             error = 'Passwords do not match. Please try again.'
             return render_template('register.html', error=error)
@@ -168,6 +193,7 @@ def register():
         return redirect(url_for('login'))
 
     return render_template('register.html')
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -188,11 +214,13 @@ def login():
 
     return render_template('login.html')
 
+
 @app.route('/logout')
 def logout():
     logout_user()
     flash('You have been logged out.')
     return redirect(url_for('index'))
+
 
 @app.route('/profile', methods=['GET', 'POST'])
 @login_required
@@ -212,7 +240,6 @@ def change_password():
         flash('Old password is incorrect.', 'danger')
         return redirect(url_for('profile'))
 
-
     if new_password != confirm_new_password:
         flash('New passwords do not match.', 'danger')
         return redirect(url_for('profile'))
@@ -223,9 +250,11 @@ def change_password():
     flash('Password successfully changed!', 'success')
     return redirect(url_for('profile'))
 
+
 def is_admin(user_id):
     admin_ids = [1]
     return user_id in admin_ids
+
 
 @app.route('/admin_panel', methods=['GET', 'POST'])
 def admin_panel():
@@ -236,8 +265,11 @@ def admin_panel():
     tours = Tour.query.all()
     return render_template('admin_panel.html', tours=tours)
 
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
 @app.route('/edit_tour/<int:id>', methods=['GET', 'POST'])
 def edit_tour(id):
     tour = Tour.query.get_or_404(id)
@@ -246,6 +278,12 @@ def edit_tour(id):
         tour.description = request.form.get('description')
         tour.price_per_person = request.form.get('price_per_person')
         tour.available_spots = request.form.get('available_spots')
+        if 'photo' in request.files:
+            photo = request.files['photo']
+            if photo and allowed_file(photo.filename):
+                filename = secure_filename(photo.filename)
+                photo.save(os.path.join(UPLOAD_FOLDER, filename))
+                tour.photo = filename
         db.session.commit()
         flash('Tour updated successfully!', 'success')
         return redirect(url_for('admin_panel'))

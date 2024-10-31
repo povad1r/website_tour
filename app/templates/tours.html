@@ -6,19 +6,53 @@
 <div class="container mt-4">
   <h1 class="text-center mb-4">Available Tours</h1>
   <div class="row">
-    {% for tour in tours %}
-      <div class="col-md-4 mb-4">
-        <div class="card">
-          <img src="{{ url_for('static', filename=tour.image_path) }}" class="card-img-top" alt="{{ tour.name }}">
-          <div class="card-body">
-            <h5 class="card-title">{{ tour.name }}</h5>
-            <p class="card-text">Available Spots: {{ tour.available_spots }}</p>
-            <p class="card-text">Price: {{ tour.price_per_person }}$</p>
-            <a href="{{ url_for('book_tour', id=tour.id) }}" class="btn btn-primary">Book Now</a>
+
+    <!-- Filter Section -->
+    <div class="col-md-3">
+      <div class="filter-box p-3 mb-4 border">
+        <h5>Filter Tours</h5>
+        <form method="GET" action="{{ url_for('tours') }}">
+          <div class="mb-3">
+            <label for="max_price" class="form-label">Max Price ($)</label>
+            <input type="number" id="max_price" name="max_price" class="form-control" placeholder="e.g., 1000">
           </div>
-        </div>
+          <div class="mb-3">
+            <label for="min_spots" class="form-label">Min Available Spots</label>
+            <input type="number" id="min_spots" name="min_spots" class="form-control" placeholder="e.g., 5">
+          </div>
+          <div class="mb-3">
+            <label for="date" class="form-label">Date</label>
+            <input type="date" id="date" name="date" class="form-control">
+          </div>
+          <button type="submit" class="btn btn-primary">Apply Filters</button>
+        </form>
       </div>
-    {% endfor %}
+    </div>
+
+    <!-- Tours Section -->
+    <div class="col-md-9">
+      <div class="row">
+        {% if tours %}
+          {% for tour in tours %}
+            <div class="col-md-4 mb-4">
+              <div class="card">
+                <img src="{{ url_for('static', filename=tour.image_path) }}" class="card-img-top" alt="{{ tour.name }}">
+                <div class="card-body">
+                  <h5 class="card-title">{{ tour.name }}</h5>
+                  <p class="card-text">{{ tour.description }}</p>
+                  <p class="card-text">{{ tour.date }}</p>
+                  <p class="card-text">Available Spots: {{ tour.available_spots }}</p>
+                  <p class="card-text">Price: {{ tour.price_per_person }}$</p>
+                  <a href="{{ url_for('book_tour', id=tour.id) }}" class="btn btn-primary">Book Now</a>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <p class="text-center">No tours found matching the criteria.</p>
+        {% endif %}
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}

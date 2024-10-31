@@ -1,32 +1,46 @@
 {% extends "base.html" %}
-{% block title %}Редагування туру{% endblock %}
+{% block title %}Edit Tour{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
-  <h2>Редагування туру: {{ tour.name }}</h2>
+  <h2>Edit Tour: {{ tour.name }}</h2>
 
-  <form method="POST" action="{{ url_for('edit_tour', id=tour.id) }}">
+  <form method="POST" action="{{ url_for('edit_tour', id=tour.id) }}" enctype="multipart/form-data">
+    <div class="d-flex align-items-start mb-3">
+      <div class="me-3">
+        <img src="{{ url_for('static', filename=tour.image_path) }}" alt="Current Tour Photo" style="max-width: 200px;">
+      </div>
+      <div class="flex-grow-1">
+        <label for="photo" class="form-label">Change Tour Photo</label>
+        <input type="file" id="photo" name="photo" class="form-control" accept="image/*">
+      </div>
+    </div>
+
     <div class="mb-3">
-      <label for="name" class="form-label">Назва</label>
+      <label for="name" class="form-label">Name</label>
       <input type="text" id="name" name="name" value="{{ tour.name }}" class="form-control" required>
     </div>
     <div class="mb-3">
-      <label for="description" class="form-label">Опис</label>
+      <label for="description" class="form-label">Description</label>
       <textarea id="description" name="description" class="form-control" rows="3" required>{{ tour.description }}</textarea>
     </div>
     <div class="mb-3">
-      <label for="price_per_person" class="form-label">Ціна за особу</label>
+      <label for="price_per_person" class="form-label">Price per Person</label>
       <input type="number" id="price_per_person" name="price_per_person" value="{{ tour.price_per_person }}" class="form-control" required>
     </div>
     <div class="mb-3">
-      <label for="date" class="form-label">Дата</label>
+      <label for="date" class="form-label">Date</label>
       <input type="date" id="date" name="date" value="{{ tour.date.strftime('%Y-%m-%d') }}" class="form-control" required>
     </div>
     <div class="mb-3">
-      <label for="available_spots" class="form-label">Доступні місця</label>
+      <label for="available_spots" class="form-label">Available Spots</label>
       <input type="number" id="available_spots" name="available_spots" value="{{ tour.available_spots }}" class="form-control" required>
     </div>
-    <button type="submit" class="btn btn-primary">Зберегти зміни</button>
+
+    <div class="d-flex justify-content-between">
+      <button type="submit" class="btn btn-primary">Save Changes</button>
+      <a href="{{ url_for('admin_panel') }}" class="btn btn-danger">Cancel</a>
+    </div>
   </form>
 </div>
 {% endblock %}
